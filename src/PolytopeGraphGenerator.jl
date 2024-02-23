@@ -148,8 +148,8 @@ The order of the vertices is θ, u3, ..., ud, w, v12, v13, v23, v14, ..., v1d, .
 .., v{d-1}d, 0
 
 # Copyright
-This code is based on a Matlab implementation to get the adjacency matrix
-written by Nicolo Gusmeroli (2020).
+With permission, his code is based on a Matlab implementation written by Nicolo
+Gusmeroli (2020) to get the adjacency matrix.
 
 # Examples
 ```julia-repl
@@ -229,8 +229,8 @@ The order of the vertices is u2, u3, ..., u{d+1}, θ, v13, ..., v1{d+1},
 v24, ..., v2{d+1}, v35, ..., v{d-2}v{d+1}, v{d-1}{d+1}
 
 # Copyright
-This code is based on a Matlab implementation to get the adjacency matrix
-written by Nicolo Gusmeroli (2020).
+With permission, his code is based on a Matlab implementation written by Nicolo
+Gusmeroli (2020) to get the adjacency matrix.
 
 # Examples
 ```julia-repl
