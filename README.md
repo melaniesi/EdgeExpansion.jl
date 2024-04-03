@@ -25,6 +25,7 @@ If BiqBin is used as solver for the $k$-bisection problem, a modification of [Bi
 ```julia
 julia> using EdgeExpansion
 julia> import EdgeExpansion.PolytopeGraphGenerator
+julia> biqbinpath = "/home/user/Code/biqbin-expedis/" # set path to BiqBin
 julia> L = PolytopeGraphGenerator.grevlex(3)
 7×7 LinearAlgebra.Symmetric{Int64, Matrix{Int64}}:
   3  -1   0   0  -1  -1   0
@@ -34,12 +35,15 @@ julia> L = PolytopeGraphGenerator.grevlex(3)
  -1   0  -1   0   3  -1   0
  -1   0   0  -1  -1   4  -1
   0  -1   0  -1   0  -1   3
-julia> split_and_bound(L, "grevlex-3", biqbin=true, biqbinpath="/home/user/Code/biqbin-expedis/", ncores=4)
+julia> result_1 = split_and_bound(L, "grevlex-3", biqbin=true, biqbinpath=biqbinpath, ncores=4);
+julia> result_2 = dinkelbach(L, "grevlex-3", biqbin_path=biqbin_path, ncores=4);
 ```
 
 Further examples can be found in the folder [`examples/`](examples/) of this project.
 
 ### References
-This package is part of the publication
+This package is part of the publications
 
-Akshay Gupte, Melanie Siebenhofer, Angelika Wiegele. (2024). _Computing the Edge Expansion of a Graph using Semidefinite Programming_ [submitted for publication].
+Akshay Gupte, Melanie Siebenhofer, Angelika Wiegele. (2024). _Edge expansion of a graph: Exploring SDP-based computational strategies._ [Manuscript in preparation].
+
+Akshay Gupte, Melanie Siebenhofer, Angelika Wiegele. (in press). _Computing the Edge Expansion of a Graph using Semidefinite Programming._ In: Combinatorial Optimization. ISCO 2024. Lecture Notes in Computer Science. Springer.
