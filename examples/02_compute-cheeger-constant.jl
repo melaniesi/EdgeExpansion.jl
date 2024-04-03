@@ -7,7 +7,10 @@ biqbin_path="/home/users/mesiebenhofe/Dokumente/Mathematik/01_Dissertation/02_Co
 L = EdgeExpansion.PolytopeGraphGenerator.grevlex(6)
 res = split_and_bound(L, biqbin_path=biqbin_path, ncores=4) # split and bound with biqbin
 res = split_and_bound(L, biqbin=false) # split and bound with bisection branch-and-bound
+res = dinkelbach(L, "grlex-10", biqbin_path=biqbin_path, ncores=4) # algorithm based on Dinkelbach
 
 instance_path = "./rand01-7-32-0.dat"
 L = EdgeExpansion.RudyGraphIO.laplacian_from_RudyFile(instance_path)
 res = split_and_bound(L, biqbin_path=biqbin_path, ncores=4)
+
+

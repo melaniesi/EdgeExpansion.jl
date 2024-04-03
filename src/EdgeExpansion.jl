@@ -149,5 +149,39 @@ function split_and_bound(L, instancename="splitandbound-instance"; biqbin=true, 
 
 end
 
+#-------------------------------#
+#     D I N K E L B A C H       #
+#-------------------------------#
+
+include("Dinkelbach.jl")
+
+"""
+    dinkelbach(L, instancename="dinkelbach-instance"; biqbin_path=missing, ncores=4)
+
+Compute the edge expansion of a graph with an algorithm based on Dinkelbach.
+
+The graph is given by its Laplacian matrix `L` and its name `instancename`.
+
+# Arguments
+- `biqbin_path=missing`: a path to the biqbin installation, e.g.,
+                         "/home/user/Code/biqbin-expedis/", has to be provided.
+                         The source code of biqbin can be downloaded from www.biqbin.eu
+- `ncores=4`: the number of cores to run biqbin on
+"""
+function dinkelbach(L, instancename="dinkelbach-instance"; biqbin_path=missing, ncores=4)
+    if ismissing(biqbin_path)
+        @error "Path to BiqBin must be provided."
+    end
+    time_ub=@elapsed upperBounds, opt = compute_upperbounds_bestsolution(L)
+    global_ub, den = findmin(upperBounds)
+    num = Int64(round(global_ub * den))
+    cheeger, xopt, res_info = dinkelbach_maxcut(L, num // den, instancename, biqbin_path, ncores)
+    if !ismissing(xopt)
+        opt = findall(==(1), xopt)
+    end
+    res_info["OptimalCut"] = opt
+    res_info["time_ub"] = time_ub
+    return res_info
+end
 
 end # module
