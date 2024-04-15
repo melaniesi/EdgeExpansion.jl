@@ -32,25 +32,42 @@ export gurobi_solve_exact, split_and_bound
 #----------------------#
 
 """
-    gurobi_solve_exact(L)
+    gurobi_solve_exact(L; lb=missing, timelimit=10800.0, nrthreads=4)
 
 Compute the edge expansion of a graph with Gurobi.
 
 Computes the edge expansion of a graph
 given by its Laplacian matrix `L` with Gurobi.
-Returns the edge expansion and the time (in seconds)
+
+# Arguments
+- `lb=missing`: provides a lower bound on the edge expansion
+                Note, that for Gurobi (version 11.0) it
+                is beneficial to set `lb = 0`.
+- `timelimit=10800`: time limit in seconds for Gurobi to solve
+                     the optimization problem
+- `nrthreads=4`:    number of threads available to Gurobi
+
+Returns the edge expansion (or lower bound), the
+relative gap obtained by Gurobi and the solve time (in seconds).
 needed for Gurobi to solve the problem.
 """
-function gurobi_solve_exact(L)
+function gurobi_solve_exact(L; lb=missing, timelimit=10800.0, nrthreads=4)
     n = size(L,1)
     m = Model(Gurobi.Optimizer)
+    # MOI.set(m, MOI.AbsoluteGapTolerance(), 1e-6)
+    set_time_limit_sec(m, timelimit)
+    set_optimizer_attribute(m, "Threads", nrthreads)
     @variable(m, x[1:n], Bin) # binary variables x₁,…,xₙ
-    @variable(m, y)
+    if ismissing(lb)
+        @variable(m, y)
+    else
+        @variable(m, y >= lb)
+    end
     @objective(m, Min, y)
     @constraint(m, 1 <= sum(x[i] for i = 1:n) <= floor(n/2))
     @constraint(m, x'*L*x - y*sum(x[i] for i=1:n) <= 0)
     optimize!(m)
-    return (value.(y), solve_time(m))
+    return objective_bound(m), relative_gap(m), solve_time(m)
 end
 
 #----------------------------------#
