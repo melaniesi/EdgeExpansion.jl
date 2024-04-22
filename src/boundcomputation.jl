@@ -28,8 +28,8 @@ Compute upper bounds on h_k(G) for 1 ≤ k ≤ ⌊n/2⌋.
 
 The graph G is given by its Laplacian matrix `L`.
 The bound computation is done with simulated annealing.
-This function returns a vector of the upper bounds h_k(G)/k
-and the cut giving the smallest upper bound on the cheeger
+This function returns a vector of the upper bounds u_k
+and the cut giving the smallest upper bound u* on the cheeger
 constant h(G).
 """
 function compute_upperbounds_bestsolution(L)
@@ -37,6 +37,7 @@ function compute_upperbounds_bestsolution(L)
     n = size(L, 1)
     nhalf = Int(floor(n / 2))
 
+    # do computation on nthreads threads
     nthreads = Threads.nthreads()
 
     upperBounds = similar(1:nhalf, Float64)
@@ -93,7 +94,7 @@ end
 Compute lower bounds on h_k(G) for 1 ≤ k ≤ ⌊n/2⌋.
 
 Computes lower bounds coming from the basic SDP relaxation
-and returns a vector of the lower bounds h_k(G)/k on h(G).
+with Mosek and returns a vector of the lower bounds l_k on h(G).
 """
 function compute_lower_bounds_simpleSDP(L)
     n = size(L,1)

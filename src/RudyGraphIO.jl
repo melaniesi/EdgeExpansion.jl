@@ -28,15 +28,16 @@ export laplacian_from_RudyFile, laplacian_to_RudyFile, laplacian_to_graphFile
 
 
 """
-    laplacian_from_RudyFile(filepath)
+    laplacian_from_RudyFile(filepath; <keyword arguments>)
 
 Return the Laplacian matrix of the graph
 stored in rudy file format in `filepath`.
 
-If weights=false we consider the rudy file
-format without weights (i.e., in each row
-there is only the pair of adjacent vertices
-without a weight)
+# Arguments
+ - `weights=false`: if `false`, we consider the rudy file
+                    format without weights (i.e., in each row
+                    there is only a pair of adjacent vertices
+                    without a third value, the weight)
 """
 function laplacian_from_RudyFile(filepath; weights=false)
     A = weights ? adjacency_from_RudyFile(filepath) : adjacency_from_RudyFileWithoutWeights(filepath)
@@ -48,6 +49,10 @@ end
 
 Return the adjacency matrix of the graph
 stored in rudy file format in `filepath`.
+
+In the first row of the file is the number of vertices and the
+number of edges separated by a blank.
+Then for each edge {i,j}, there is a line "i j weight".
 """
 function adjacency_from_RudyFile(filepath)
     io = open(filepath)
@@ -105,7 +110,11 @@ end
     laplacian_to_RudyFile(L, filepath)
     
 Write to `filepath` the rudy file of
-the graph with Laplacian matrix `L`.
+the graph given by its Laplacian matrix `L`.
+
+In the first row of the file is the number of vertices and the
+number of edges separated by a blank.
+Then for each edge {i,j}, there is a line "i j weight".
 """
 function laplacian_to_RudyFile(L, filepath)
     io = open(filepath, "w")

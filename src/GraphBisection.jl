@@ -46,28 +46,28 @@ end
     bisection_biqbin_withUB(L, k, graphname, ub, ub_bisection_k = missing, ncores=4, biqbinpath=missing)
 
 Solve the `k`-bisection problem for the given graph with its Laplacian
-matrix `L` with biqbin's max-cut solver [[3]](#3).
+matrix `L` with BiqBin's max-cut solver [[5]](#5).
 
 # Arguments
 - `graphname::String`: the name of the instance
 - `ub`: (artificial) upper bound on the `k`-bisection problem (to stop algorithm earlier if needed)
 - `ub_bisection_k`: upper bound on the `k`-bisection problem to formulate the max-cut problem
-- `ncores=4`: number of cores to run the biqbin algorithm on
-- `biqbinpath=missing`: path to biqbin installation, e.g.: "/home/user/Code/biqbin-expedis/".
+- `ncores=4`: number of cores to run the BiqBin algorithm on
+- `biqbinpath=missing`: path to the BiqBin installation, e.g.: "/home/user/Code/biqbin-expedis/".
+
+Returns the optimal cut (if it was possible to improve upon `ub`, otherwise it is `missing`),
+the size of the cut, the number of branch-and-bound nodes and the
+computation time in seconds BiqBin needed.   
 
 # References
-<a id="3">[3]</a> 
+<a id="5">[5]</a> 
 Nicolò Gusmeroli, Timotej Hrga, Borut Lužar, Janez Povh, Melanie Siebenhofer, and Angelika Wiegele (2022).
 BiqBin: A Parallel Branch-and-bound Solver for Binary Quadratic Problems with Linear Constraints.
 ACM Trans. Math. Softw. 48, 2.
 """
 function bisection_biqbin_withUB(L, k, graphname::String, ub, ub_bisection_k = missing, ncores::Int=4, biqbinpath::String=missing)
     if ismissing(biqbinpath)
-        if isdir("/home/users/mesiebenhofe")
-            biqbinpath = "/home/users/mesiebenhofe/Dokumente/Mathematik/01_Dissertation/02_Code/biqbin-expedis/"
-        else
-            biqbinpath = "/home/mesiebenhofe/Dokumente/01_Dissertation/02_Code/biqbin-expedis/"
-        end
+        throw(ErrorException("Path to BiqBin not provided."))
     end
     instancespath = biqbinpath*"Instances/"
     if !isdir(instancespath)
@@ -75,7 +75,7 @@ function bisection_biqbin_withUB(L, k, graphname::String, ub, ub_bisection_k = m
     end
     mpirunexe = try chomp(read(`which mpirun`, String)) #"/usr/bin/mpirun"
     catch
-        throw(ErrorException("Can not find mpirun, please install mpich to run biqbin."))
+        throw(ErrorException("Can not find mpirun, please install mpich to run BiqBin."))
     end
 
     # write max cut input
@@ -120,11 +120,11 @@ linear equality constraint to compute the
 into a max cut problem and writes the
 corresponding max-cut input file (rudy format)
 in `filepath` and returns the `offset` such that
-h_k(G) = `offset` - max cut solution.
+`k`-bisection(G) = `offset` - max cut solution.
 
 For the transformation an upper bound on the
 `k`-bisection problem needs to be computed.
-This can also be provided by `ub_bisection_k`.
+It can optionally be provided by `ub_bisection_k`.
 """
 function write_max_cut_input(L, k, filepath, ub_bisection_k = missing)
     n = size(L, 1)
@@ -178,7 +178,7 @@ if the provided initial upper bound was the optimum, so
 no better `k`-bisection was found.
 
 The lower bounding procedure is based on the algorithm
-introduced in [[1]](#1).
+introduced in [[3]](#3).
 
 ### Details on the algorithm:
 * BFS (best first search), branching rule most fractional
@@ -191,7 +191,7 @@ introduced in [[1]](#1).
 - `admm_maxouterloops=5`: maximum outer loops (adding violated triangle inequalities)
 
 # References
-<a id="1">[1]</a> 
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.
@@ -240,10 +240,6 @@ function bisection_branchandbound(L, k, ub=Inf, lb=-Inf; admm_epstols=(1e-3,5e-3
         if new_ub < ub
             ub = new_ub
             @printf("NEW UPPER BOUND: %7d\n", new_ub)
-            #if ub / k < global_upper_bound
-            #    global_upper_bound = ub / k
-            #    opt = [local_vertices[perm]; findall(isequal(1), bb_node.vertices)]
-            #end
             opt = [local_vertices[perm]; findall(isequal(1), bb_node.vertices)]
             if ub - bb_node.lb < 1 - 1e-6
                 println("----------------------------------------------------------------------")
@@ -292,17 +288,18 @@ end
     shrink_L(v, L)
 
 Shrink the Laplacian matrix `L` for the bisection
-problem if the partial assignment `v` is given.
+problem if the partial assignment `v` of the
+vertices is given.
 
 The vector `v` has dimension `n` and on position
 i it is true if vertex i is set to 1 and false if
 it is set to 0 and missing if vertex i has no
 assignment yet (hence is a local vertex in the
 subproblem of the bisection problem).
-Returns `(local_L, lt, const_term)`.
+Returns `(local_L, linear_term, const_term)`.
 The objective x'Lx with the assignment of x as given
 in `v` is then equivalent to
-y'`local_L`y + `lt`'y + `const_term`.
+`y' * local_L * y + linear_term' * y + const_term`.
 """
 function shrink_L(v, L)
     local_v = findall(ismissing, v)
@@ -329,22 +326,31 @@ function shrink_L(v, L)
 end
 
 """
-    kCut_simulatedAnnealing(L, k; trials=10, locSearch=false)
+    kCut_simulatedAnnealing(L, k; <keyword arguments>)
 
 Heuristic (simulated annealing) for the min `k`-bisection problem.
 
-The number of restarts equals `trials` and if
-`locSearch` is true, after each outer iteration, a local
-search is done to find local improvements.
+# Arguments
+ - `trials=10`: the number of restarts
+ - `locSearch=false`: if `true`, a local search is performed
+                to find local improvements after each outer iteration,
+                i.e., before restart with new random permutation.
 
 # Copyright
-With permission, this code is based on a C implementation of
-Elisabeth Gaar's simulated annealing heuristic for the QAP,
-as used in [[2]](#2).
+With permission, this code is based on Elisabeth Gaar's
+C implementation of simulated annealing heuristic for the QAP,
+as used in [[4]](#4). The simulated annealing heuristic was
+introduced by Burkard and Rendl in [[2]](#2).
 
-<a id="2">[2]</a> 
+<a id="4">[4]</a> 
 Gaar, E. (2018). Efficient Implementation of SDP Relaxations for the Stable Set Problem.
 Ph.D. thesis, Alpen-Adria-Universität Klagenfurt.
+
+<a id="2">[2]</a> 
+Rainer E. Burkard and Franz Rendl. “A thermodynamically motivated simulation
+procedure for combinatorial optimization problems”. In: European Journal of
+Operational Research 17 (1984), pp. 169–174.
+
 """
 function kCut_simulatedAnnealing(L, k; trials=10, locSearch=false)
     n = size(L,1)
@@ -428,7 +434,7 @@ end
 Find local minimizer of min ⟨ones(k,k),L_permutation⟩.
 
 The parameter `L` is a matrix of dimension `n`×`n`,
-`k` ⩽ `n` and `permutation` is a permutation on the rows
+`k ⩽ n` and `permutation` is a permutation on the rows
 and columns of the matrix `L` given as an array of
 dimension `n` containing the elements from 1 to `n`.
 
@@ -441,6 +447,8 @@ no possible improvement anymore.
 function findLocalOptimizer!(permutation,L,k)
     n = size(L,1)
     # initial changeOfSol
+    # store in D the change of the solution if
+    # we swap (values of) vertex permutation[i] and permutation[k+j]
     D = zeros(k,n-k)
     for i1=1:k
         s = sum(L[permutation[j],permutation[i1]] for j=1:k)
@@ -460,7 +468,7 @@ function findLocalOptimizer!(permutation,L,k)
         poss_swaps = findall(x->x==d, D)
         swap = rand(poss_swaps)
         i1,ci2 = swap[1],swap[2]
-        i2 = ci2 + k
+        i2 = k + ci2
 
         impr = D[i1,ci2]
         val += impr
@@ -484,10 +492,10 @@ end
     function admm_bisect!(bb_node, L, linear_term=missing, const_term=0, max_new_bqpineq=0, upper_bound=Inf; <keyword arguments>)
 
 Compute a lower bound on the generalized `k`-bisection problem with the ADMM
-algorithm of de Meijer et al. [[1]](#1).
+algorithm of de Meijer et al. [[3]](#3).
 
 The generalized `k`-bisection problem means that we want to minimize
-the objective x'`L`x + `linear_term`'x + `const_term` instead of x'`L`x.
+the objective `x' * L * x + linear_term' * x + const_term` instead of `x' * L * x`.
 In each outer iteration, we add at most `max_new_bqpineq` many new triangle
 inequalities.
 An `upper_bound` on the objective can be provided. The algorithm stops as soon as
@@ -495,7 +503,8 @@ the bound is ≥ this upper bound.
 Uses bb_node.estimated_improvement to stop the algorithm if it is not expected to
 prune the branch-and-bound node by adding violated triangle inequalities.
 If violated triangle inequalities were added, the improvement to the result from
-the first outer ADMM loop is updated in bb_node.estimated_improvement.
+the first outer ADMM loop (DNN bound without triangle inequalities) is updated
+in bb_node.estimated_improvement.
 
 # Arguments
 - `eps_tols=(1e-3, 5e-3, 1e-3)`: tolerance on when to stop inner ADMM iterations for the
@@ -508,7 +517,7 @@ the first outer ADMM loop is updated in bb_node.estimated_improvement.
 - `print_iteration=100`: output after `print_iteration` many inner ADMM iteration steps
 
 # References
-<a id="1">[1]</a> 
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.
@@ -693,6 +702,9 @@ end
     symm_norm(A::Symmetric)
 
 Compute the Frobenius norm of a symmetric matrix `A`.
+
+This is added since there is no `symm_norm` for
+`Symmetric` matrices, but `dot` is implemented.
 """
 function symm_norm(A::Symmetric)
     return sqrt(dot(A,A))
@@ -704,6 +716,9 @@ end
 Computes the projection of the matrix `M`
 onto the cone of positive semidefinite
 matrices.
+
+Returns the eigenvectors corresponding to the positive eigenvalues
+as columns of the matrix `V` and a vector containing the positive eigenvalues.
 """
 function projection_PSD_cone2(M)
     ev, V = eigen(M)
@@ -718,9 +733,9 @@ end
 
 Project `M` onto the polyhedral set \$\\mathcal{X}_{BP}\$.
 
-The projection is given in Appendix A of [[1]](#1).
+The projection is given in Appendix A of [[3]](#3).
 
-<a id="1">[1]</a> 
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.
@@ -773,15 +788,18 @@ end
 Return the projection of `y` onto the capped simplex.
 
 The projection onto the capped simplex is
-\$\\arg\\min \\lVert x - y \\rVert s.t.: e^\\top x = k\$
+\$\\arg\\min \\lVert x - y \\rVert s.t.: e^\\top x = k, 0 \\leq x \\leq 1\$
 
-Alorithm of
+Algorithm of [[7]](7).
+
+# Copyright:
+Translation of projection.m from
+https://github.com/canyilu/Projection-onto-the-capped-simplex
+
+<a id="7">[7]</a>
 Weiran Wang and Canyi Lu (2015).
 Projection onto the Capped Simplex,
 arXiv preprint arXiv:1503.01002.
-    
-Translation of projection.m from
-https://github.com/canyilu/Projection-onto-the-capped-simplex
 """
 function projection_cappedsimplex(y, k)
     n = length(y)
@@ -834,11 +852,13 @@ end
 Return the approximate projection of `y` onto the capped simplex.
 
 The projection of `y` onto the capped simplex is
-\$\\arg\\min \\lVert x - y \\rVert s.t.: e^\\top x = k\$
+\$\\arg\\min \\lVert x - y \\rVert s.t.: e^\\top x = k, 0 \\leq x \\leq 1\$
 with an approximation error of |sum(x)-k| < eps.
 The solution is guaranteed to be bounded by 0 and 1.
 
-This is an implementation of Algorithm 1 of
+This is an implementation of Algorithm 1 of [[1]](1).
+
+<a id="1">[1]</a> 
 Andersen Ang, Jianzhu Ma, Nianjun Liu, Kun Huang, Yijie Wang (2021).
 Fast Projection onto the Capped Simplex with Applications to
 Sparse Regression in Bioinformatics,
@@ -853,7 +873,7 @@ function projection_cappedsimplex_approx(y, k, eps=1e-12)
     elseif k < 0 || k > n
         throw(DomainError(k, "argument must be between 0 and length(y)"))
     end
-    gamma = minimum(y) - 0.5 # todo: better: maximum(y) - 0.5?
+    gamma = minimum(y) - 0.5
     v = y .- gamma
     w1 = k - sum(v)
     ct = 0
@@ -899,9 +919,9 @@ The set of triangles \$T\$ is given in a list of clusters `clustersBQP`.
 We stop the iterative projection algorithm as soon as the norm of the
 difference of the projections is less than `eps`.
 
-The algorithm is explained in more detail in Section 3.2 of [[1]](#1).
+The algorithm is explained in more detail in Section 3.2 of [[3]](#3).
 
-<a id="1">[1]</a> 
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.
@@ -934,8 +954,8 @@ end
 Project `M` onto the polyhedral set \$\\mathcal{X}_{BP}\$
 and return the normal matrix onto the projected matrix.
 
-The projection is given in Appendix A of [[1]](#1).
-<a id="1">[1]</a> 
+The projection is given in Appendix A of [[3]](#3).
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.
@@ -985,17 +1005,18 @@ end
 """
     projection_normalmatrix_bqps_parallel!(M::Symmetric, bqps::Array{BQPIneq,1}, normal_mat)
 
-Project `M` onto H_`bqps` and store in `M` the projection and in
-`normal_mat` the normal matrix.
+Project `M` onto H_`bqps` and store in `M` the projection and 
+returns the normal matrix `normal_mat`.
 
-It holds that \$normal\\_mat = M - \\mathcal{P}_{H_{bqps}}(M) \$ and
-after the call of the function, `M` is projected onto the polyhedron
-\$H_{bqps}\$ where the triangle inequalities in `bqps` have to be
-non-overlapping.
+This projection is given in Lemma 6 of [[3]](#3).
 
-The projection is given in Lemma 6 of [[1]](#1).
+The triangle inequalities in `bqps` have to be non-overlapping.
 
-<a id="1">[1]</a> 
+It holds `normal_mat` \$ = M - \\mathcal{P}_{H_{bqps}}(M) \$ and
+after the call of the function, the projection \$\\mathcal{P}_{H_{bqps}}(M)\$
+is stored in `M`.
+
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.
@@ -1047,9 +1068,9 @@ computed in the ADMM algorithm and is provided for performance
 reasons.
 
 The valid lower bound computation is done es described in
-Section 3.3.1 of [[1]](#1)
+Section 3.3.1 of [[3]](#3).
 
-<a id="1">[1]</a> 
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.
@@ -1088,6 +1109,8 @@ Add to `triangles` all violated triangle inequalities found in
 
 At most `max_newineq` new triangle inequalities with a violation of at least `eps`
 are added to `triangles`. The most violated inequalities found are added.
+
+Returns the number of new triangle inequalties added to `triangles`.
 """
 function find_violated_triangles!(triangles::Vector{BQPIneq}, X, start_index::Int, end_index::Int, max_newineq, eps=1e-3)
     if max_newineq == 0 return 0; end
@@ -1161,9 +1184,9 @@ Return the graph representing overlaps of the
 BQP-inequalities in `bqps`.
 
 The graph is constructed as describe in the last
-paragraph of Section 3.2 in [[1]](#1)
+paragraph of Section 3.2 in [[3]](#3).
 
-<a id="1">[1]</a> 
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.
@@ -1191,9 +1214,9 @@ Return the vertex chosen by the most fractional
 branching rule based on `Xopt`.
 
 The vertex chosen by the branching rule
-most fractional is the one with value `Xopt[i,i]`
-is closest to 1/2. `Xopt` is the solution of a
-relaxation of the original problem.
+most fractional is the one with value `Xopt[1+i,1+i]`
+is closest to 1/2 for 1 ≤ i ≤ n. `Xopt` is the solution of a
+relaxation of the original problem with \$\\dim(Xopt) = 2n +1\$.
 """
 function branchingDecision_mostfrac(Xopt)
     return argmax(abs.(Xopt[2:Int((size(Xopt,2) - 1) / 2),1] .- 0.5))
@@ -1206,9 +1229,9 @@ Return the vertex chosen by the closest to 1
 branching rule based on `Xopt`.
 
 The vertex chosen by the branching rule
-closest to 1 is the one with value `Xopt[i,i]`
-is closest to 1. `Xopt` is the solution of a
-relaxation of the original problem.
+closest to 1 is the one with value `Xopt[1+i,1+i]`
+is closest to 1 for 1 ≤ i ≤ n. `Xopt` is the solution of a
+relaxation of the original problem with \$\\dim(Xopt) = 2n +1\$.
 """
 function branchingDecision_closest2one(Xopt)
     return argmax(diag(Xopt)[2:Int((size(Xopt,2) - 1) / 2)])
