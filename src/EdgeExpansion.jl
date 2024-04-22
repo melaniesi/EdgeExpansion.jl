@@ -25,7 +25,7 @@ using Gurobi
 using JuMP
 using Random
 
-export gurobi_solve_exact, split_and_bound
+export gurobi_solve_exact, split_and_bound, dinkelbach
 
 #----------------------#
 #     G U R O B I      #
@@ -88,9 +88,25 @@ The graph is given by its Laplacian matrix `L` and its name `instancename`.
                  the ADMM branch-and-bound solver otherwise.
 - `biqbin_path=missing`: if `biqbin=true` a path to the biqbin installation, e.g.,
                          "/home/user/Code/biqbin-expedis/", has to be provided.
-                         The source code of biqbin can be downloaded from www.biqbin.eu
+                         The source code of biqbin can be downloaded from
+                         https://gitlab.aau.at/BiqBin/biqbin.
 - `ncores=4`: the number of cores to run biqbin on
 
+Returns a solution dictionary with the entries
+ - EdgeExpansion
+ - OptimalCut
+ - UpperBounds: a vector of the upper bounds u_k
+ - CheapLowerBounds: a vector of the lower bounds l_k
+ - IndicesBetterBound: indices k for which we used BiqBin/branch-and-bound to
+                       obtain better lower bounds/or computed the optimum h_k
+ - NewBoundsBiqBin: a vector with lower bounds, improved lower bounds or if needed optimal
+                    values h_k
+ - RuntimeNumerics: Dictionary with entries
+      - TimePreprocessing: time needed for preprocessing in seconds
+      - TimesBiqBin: vector of length n with the time spent to compute better lower bound/compute h_k
+                     in position k
+      - NrBBNodes: vector of length n with the number of branch-and-bound nodes needed to compute
+                   better lower bound/compute h_k
 """
 function split_and_bound(L, instancename="splitandbound-instance"; biqbin=true, biqbin_path=missing, ncores=4)
     Random.seed!(0)
@@ -128,7 +144,9 @@ function split_and_bound(L, instancename="splitandbound-instance"; biqbin=true, 
     if isempty(indices_better_bound)
         # no lower bound below ub → we know the optimum
         # global_upper_bound = new_upperBounds[best_k] == lowerBounds[best_k]
-        return global_upper_bound, opt, upperBounds, new_upperBounds, lowerBounds, missing, missing, (time_preproc, missing, missing)
+        return Dict("EdgeExpansion" => global_upper_bound, "OptimalCut" => opt, "UpperBounds" => new_upperBounds, "CheapLowerBounds" => lowerBounds,
+                    "NewBoundsBiqBin" => missing, "IndicesBetterBound" => missing,
+                    "RuntimeNumerics" => Dict(zip(["TimePreprocessing", "TimesBiqBin", "NrBBNodes"],[time_preproc, missing, missing])) )
     end
 
     # we want to start with the most promising k
@@ -173,7 +191,7 @@ end
 include("Dinkelbach.jl")
 
 """
-    dinkelbach(L, instancename="dinkelbach-instance"; biqbin_path=missing, ncores=4)
+    dinkelbach(L, instancename="dinkelbach-instance"; <keyword arguments>)
 
 Compute the edge expansion of a graph with an algorithm based on Dinkelbach.
 
@@ -184,6 +202,16 @@ The graph is given by its Laplacian matrix `L` and its name `instancename`.
                          "/home/user/Code/biqbin-expedis/", has to be provided.
                          The source code of biqbin can be downloaded from www.biqbin.eu
 - `ncores=4`: the number of cores to run biqbin on
+
+Returns a dictionary with the entries
+ - OptimalCut: one side of the optimal Cheeger cut
+ - time_ub:      time in seconds needed to compute upper bounds u_k (preprocessing)
+ - guesses:      list of the guesses \$\\frac{\\gamma_n}{\\gamma_d}\$
+ - numerators:   list of the numerators of the guesses \$\\gamma_n \$
+ - denominators: list of he denominators of the guesses \$\\gamma_d \$
+ - bb-time:      list of of times in seconds the branch-and-bound algorithm needed
+                 to check guesses
+ - bb-nodes:     list of branch-and-bound nodes needed to check guesses
 """
 function dinkelbach(L, instancename="dinkelbach-instance"; biqbin_path=missing, ncores=4)
     if ismissing(biqbin_path)

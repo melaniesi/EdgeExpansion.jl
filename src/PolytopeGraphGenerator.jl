@@ -80,8 +80,9 @@ Return the Laplacian matrix of the graph of the polytope given by
 its vertices.
 
 The vertices of the polytopes are provided as the rows
-of the matrix `V`. The edges are determined by
-solving Linear Programs with the HiGHS Solver.
+of the matrix `V`. The existence of edges between each
+pair of vertices is tested with an LP feasibility problem,
+done with the HiGHS Solver.
 """
 function laplacian_of_polytope_withoutPolymake(V)
     m = size(V, 1)
@@ -142,8 +143,8 @@ end
 
 Return the Laplacian matrix of the graph of the grlex polytope in dimension `d`.
 
-For details on the graph of the polytope,
-see https://arxiv.org/pdf/1612.06332.pdf, figure 2.
+The grlex polytope was introduced in [[4]](4).
+For details on the graph of the polytope, see Figure 2 in [[4]](4).
 The order of the vertices is θ, u3, ..., ud, w, v12, v13, v23, v14, ..., v1d, ..
 .., v{d-1}d, 0
 
@@ -164,9 +165,13 @@ julia> print(grlex(5))
 0 0 0 0 0 0 0 0 0 0 -1 -1 -1 5 -1 -1; 0 0 0 -1 0 0 0 0 0 0 0 -1 -1 -1 5 -1;
 0 0 0 0 -1 0 0 0 0 0 0 -1 -1 -1 -1 5]
 ```
+
+
+<a id="4">[4]</a> 
+Akshay Gupte and Svetlana Poznanovic. “On Dantzig figures from graded lexico-
+graphic orders”. In: Discrete Mathematics 341.6 (2018), pp. 1534–1554.
 """
 function grlex(d)
-    # graph from https://arxiv.org/pdf/1612.06332.pdf, figure 2
     v = [d, 1:d-1..., 1]
     p = length(v)
     n = sum(v)
@@ -203,7 +208,6 @@ function grlex(d)
     L[r:r+v[p-1],c] .= -1 # edges from last v-clique to 0
 
     # make symmetric matrix! make laplacian!
-    #L = UpperTriangular(L)
     L = Symmetric(L,:U)
     for i = 1:n
         L[i,i] -= sum(L[:,i])
@@ -223,7 +227,8 @@ end
 Return the Laplacian matrix of the graph of the grevlex polytope
 in dimension `d`.
 
-See https://arxiv.org/pdf/1612.06332.pdf, figure 3 for a description
+The grevlex polytope was introduced in [[4]](4).
+See [[4]](4) and especially Figure 3 therein for a description
 of the graph of the grevlex polytope in dimension `d`
 The order of the vertices is u2, u3, ..., u{d+1}, θ, v13, ..., v1{d+1},
 v24, ..., v2{d+1}, v35, ..., v{d-2}v{d+1}, v{d-1}{d+1}
@@ -248,16 +253,12 @@ julia> grevlex(4)
   0  -1   0   0  -1   0   0  -1  -1   5  -1
   0   0  -1   0  -1   0   0  -1   0  -1   4
 ```
+
+<a id="4">[4]</a> 
+Akshay Gupte and Svetlana Poznanovic. “On Dantzig figures from graded lexico-
+graphic orders”. In: Discrete Mathematics 341.6 (2018), pp. 1534–1554.
 """
 function grevlex(d)
-    # graph from https://arxiv.org/pdf/1612.06332.pdf, figure 3
-    # order:  u2, ... , u{d+1}, 0,
-    #         v13, ..., v1{d+1},
-    #         v24, ... , v2{d+1},
-    #         v35, ... v3{d+1},
-    #         v{d-2}{d}, v{d-2}{d+1},
-    #         v{d-1}{d+1}
-    #   (row-wise)
     v = [d+1,d-1:-1:1 ...]
     n = (d^2 + d + 2) >> 1
 
@@ -288,7 +289,6 @@ function grevlex(d)
         end
     end
     # make symmetric matrix! make laplacian!
-    #L = UpperTriangular(L)
     L = Symmetric(L,:U)
     for i = 1:n
         L[i,i] -= sum(L[:,i])

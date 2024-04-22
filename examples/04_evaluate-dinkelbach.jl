@@ -1,4 +1,4 @@
-
+using EdgeExpansion
 
 """
     evaluate_dinkelbach(paths; biqbin_path=missing, ncores=4)

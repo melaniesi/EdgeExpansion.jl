@@ -44,6 +44,6 @@ Further examples can be found in the folder [`examples/`](examples/) of this pro
 ### References
 This package is part of the publications
 
-Akshay Gupte, Melanie Siebenhofer, Angelika Wiegele. (2024). _Edge expansion of a graph: Exploring SDP-based computational strategies._ [Manuscript in preparation].
+Akshay Gupte, Melanie Siebenhofer, Angelika Wiegele. (2024). _Edge expansion of a graph: SDP-based computational strategies._ [Manuscript in preparation].
 
 Akshay Gupte, Melanie Siebenhofer, Angelika Wiegele. (in press). _Computing the Edge Expansion of a Graph using Semidefinite Programming._ In: Combinatorial Optimization. ISCO 2024. Lecture Notes in Computer Science. Springer.

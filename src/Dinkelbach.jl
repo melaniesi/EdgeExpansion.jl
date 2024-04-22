@@ -25,17 +25,19 @@ algorithm.
 
 As a starting `guess` a valid upper
 bound on the edge expansion has to be provided.
-Returns the edge expansion and a history of the
+Returns the edge expansion, the optimal cut and
+a dictionary containing a history of the
 guesses computed with the Dinkelbach algorithm
-as well as B&B nodes and execution times for
-each step in the iterative Dinkelbach algorithm.
+as well as the number of B&B nodes and execution
+times for each step in the iterative Discrete Newton-
+Dinkelbach algorithm.
 
 The underlying optimization problem is solved
-by transformation to a max cut instance and solving
-the problem with BiqBin [[3]](3).
+by transformation to a max-cut problem and solving
+the problem with the max-cut solver of BiqBin [[5]](5).
 
 # References
-<a id="3">[3]</a> 
+<a id="5">[5]</a> 
 Nicolò Gusmeroli, Timotej Hrga, Borut Lužar, Janez Povh, Melanie Siebenhofer, and Angelika Wiegele (2022).
 BiqBin: A Parallel Branch-and-bound Solver for Binary Quadratic Problems with Linear Constraints.
 ACM Trans. Math. Softw. 48, 2.
@@ -102,7 +104,7 @@ end
 
 
 """
-    write_maxcut_inputfile_checkOptimum(L, guess::Rational, filepath, lower::Int=1,upper::Union{Int,Missing}=missing)
+    write_maxcut_inputfile_checkOptimum(L, guess::Rational, filepath, lower::Int=1, upper::Union{Int,Missing}=missing)
 
 Transform parametric optimization problem to check if `guess` is optimum
 to a max-cut instance.
@@ -189,12 +191,12 @@ end
 Solve the max cut problem with rudy input file stored in `filepath`.
 
 Returns dictionary with the "ExecutionMD" part of the JSON output file of
-BiqBin's max cut solver [[3]](3).
+BiqBin's max cut solver [[5]](5).
 The path to the BiqBin installation has to be provided, for example
 `biqbinpath` = "home/user/src/biqbin-expedis/"
 
 # References
-<a id="3">[3]</a> 
+<a id="5">[5]</a> 
 Nicolò Gusmeroli, Timotej Hrga, Borut Lužar, Janez Povh, Melanie Siebenhofer, and Angelika Wiegele (2022).
 BiqBin: A Parallel Branch-and-bound Solver for Binary Quadratic Problems with Linear Constraints.
 ACM Trans. Math. Softw. 48, 2.
