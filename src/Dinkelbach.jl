@@ -34,10 +34,10 @@ Dinkelbach algorithm.
 
 The underlying optimization problem is solved
 by transformation to a max-cut problem and solving
-the problem with the max-cut solver of BiqBin [[5]](5).
+the problem with the max-cut solver of BiqBin [[6]](6).
 
 # References
-<a id="5">[5]</a> 
+<a id="6">[6]</a> 
 Nicolò Gusmeroli, Timotej Hrga, Borut Lužar, Janez Povh, Melanie Siebenhofer, and Angelika Wiegele (2022).
 BiqBin: A Parallel Branch-and-bound Solver for Binary Quadratic Problems with Linear Constraints.
 ACM Trans. Math. Softw. 48, 2.
@@ -191,12 +191,12 @@ end
 Solve the max cut problem with rudy input file stored in `filepath`.
 
 Returns dictionary with the "ExecutionMD" part of the JSON output file of
-BiqBin's max cut solver [[5]](5).
+BiqBin's max cut solver [[6]](6).
 The path to the BiqBin installation has to be provided, for example
 `biqbinpath` = "home/user/src/biqbin-expedis/"
 
 # References
-<a id="5">[5]</a> 
+<a id="6">[6]</a> 
 Nicolò Gusmeroli, Timotej Hrga, Borut Lužar, Janez Povh, Melanie Siebenhofer, and Angelika Wiegele (2022).
 BiqBin: A Parallel Branch-and-bound Solver for Binary Quadratic Problems with Linear Constraints.
 ACM Trans. Math. Softw. 48, 2.

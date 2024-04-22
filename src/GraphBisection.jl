@@ -178,7 +178,7 @@ if the provided initial upper bound was the optimum, so
 no better `k`-bisection was found.
 
 The lower bounding procedure is based on the algorithm
-introduced in [[2]](#2).
+introduced in [[3]](#3).
 
 ### Details on the algorithm:
 * BFS (best first search), branching rule most fractional
@@ -191,7 +191,7 @@ introduced in [[2]](#2).
 - `admm_maxouterloops=5`: maximum outer loops (adding violated triangle inequalities)
 
 # References
-<a id="2">[1]</a> 
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.
@@ -339,14 +339,14 @@ Heuristic (simulated annealing) for the min `k`-bisection problem.
 # Copyright
 With permission, this code is based on Elisabeth Gaar's
 C implementation of simulated annealing heuristic for the QAP,
-as used in [[3]](#3). The simulated annealing heuristic was
-introduced by Burkard and Rendl in [[1]](#1).
+as used in [[4]](#4). The simulated annealing heuristic was
+introduced by Burkard and Rendl in [[2]](#2).
 
-<a id="3">[3]</a> 
+<a id="4">[4]</a> 
 Gaar, E. (2018). Efficient Implementation of SDP Relaxations for the Stable Set Problem.
 Ph.D. thesis, Alpen-Adria-Universität Klagenfurt.
 
-<a id="1">[1]</a> 
+<a id="2">[2]</a> 
 Rainer E. Burkard and Franz Rendl. “A thermodynamically motivated simulation
 procedure for combinatorial optimization problems”. In: European Journal of
 Operational Research 17 (1984), pp. 169–174.
@@ -492,7 +492,7 @@ end
     function admm_bisect!(bb_node, L, linear_term=missing, const_term=0, max_new_bqpineq=0, upper_bound=Inf; <keyword arguments>)
 
 Compute a lower bound on the generalized `k`-bisection problem with the ADMM
-algorithm of de Meijer et al. [[2]](#2).
+algorithm of de Meijer et al. [[3]](#3).
 
 The generalized `k`-bisection problem means that we want to minimize
 the objective `x' * L * x + linear_term' * x + const_term` instead of `x' * L * x`.
@@ -517,7 +517,7 @@ in bb_node.estimated_improvement.
 - `print_iteration=100`: output after `print_iteration` many inner ADMM iteration steps
 
 # References
-<a id="2">[2]</a> 
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.
@@ -733,9 +733,9 @@ end
 
 Project `M` onto the polyhedral set \$\\mathcal{X}_{BP}\$.
 
-The projection is given in Appendix A of [[2]](#2).
+The projection is given in Appendix A of [[3]](#3).
 
-<a id="2">[2]</a> 
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.
@@ -790,13 +790,13 @@ Return the projection of `y` onto the capped simplex.
 The projection onto the capped simplex is
 \$\\arg\\min \\lVert x - y \\rVert s.t.: e^\\top x = k, 0 \\leq x \\leq 1\$
 
-Alorithm of [[6]](6).
+Algorithm of [[7]](7).
 
 # Copyright:
 Translation of projection.m from
 https://github.com/canyilu/Projection-onto-the-capped-simplex
 
-<a id="6">[6]</a>
+<a id="7">[7]</a>
 Weiran Wang and Canyi Lu (2015).
 Projection onto the Capped Simplex,
 arXiv preprint arXiv:1503.01002.
@@ -856,9 +856,9 @@ The projection of `y` onto the capped simplex is
 with an approximation error of |sum(x)-k| < eps.
 The solution is guaranteed to be bounded by 0 and 1.
 
-This is an implementation of Algorithm 1 of [[0]](0).
+This is an implementation of Algorithm 1 of [[1]](1).
 
-<a id="0">[0]</a> 
+<a id="1">[1]</a> 
 Andersen Ang, Jianzhu Ma, Nianjun Liu, Kun Huang, Yijie Wang (2021).
 Fast Projection onto the Capped Simplex with Applications to
 Sparse Regression in Bioinformatics,
@@ -919,9 +919,9 @@ The set of triangles \$T\$ is given in a list of clusters `clustersBQP`.
 We stop the iterative projection algorithm as soon as the norm of the
 difference of the projections is less than `eps`.
 
-The algorithm is explained in more detail in Section 3.2 of [[2]](#2).
+The algorithm is explained in more detail in Section 3.2 of [[3]](#3).
 
-<a id="2">[1]</a> 
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.
@@ -954,8 +954,8 @@ end
 Project `M` onto the polyhedral set \$\\mathcal{X}_{BP}\$
 and return the normal matrix onto the projected matrix.
 
-The projection is given in Appendix A of [[2]](#2).
-<a id="2">[2]</a> 
+The projection is given in Appendix A of [[3]](#3).
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.
@@ -1008,7 +1008,7 @@ end
 Project `M` onto H_`bqps` and store in `M` the projection and 
 returns the normal matrix `normal_mat`.
 
-This projection is given in Lemma 6 of [[2]](#2).
+This projection is given in Lemma 6 of [[3]](#3).
 
 The triangle inequalities in `bqps` have to be non-overlapping.
 
@@ -1016,7 +1016,7 @@ It holds `normal_mat` \$ = M - \\mathcal{P}_{H_{bqps}}(M) \$ and
 after the call of the function, the projection \$\\mathcal{P}_{H_{bqps}}(M)\$
 is stored in `M`.
 
-<a id="2">[2]</a> 
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.
@@ -1068,9 +1068,9 @@ computed in the ADMM algorithm and is provided for performance
 reasons.
 
 The valid lower bound computation is done es described in
-Section 3.3.1 of [[2]](#2).
+Section 3.3.1 of [[3]](#3).
 
-<a id="2">[2]</a> 
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.
@@ -1184,9 +1184,9 @@ Return the graph representing overlaps of the
 BQP-inequalities in `bqps`.
 
 The graph is constructed as describe in the last
-paragraph of Section 3.2 in [[2]](#2).
+paragraph of Section 3.2 in [[3]](#3).
 
-<a id="2">[2]</a> 
+<a id="3">[3]</a> 
 de Meijer Frank, Sotirov Renata, Wiegele Angelika, Zhao Shudian (2023).
 Partitioning through projections: Strong SDP bounds for large graph partition problems
 Comput. Oper. Res., 151.

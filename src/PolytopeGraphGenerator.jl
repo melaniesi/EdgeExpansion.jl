@@ -143,8 +143,8 @@ end
 
 Return the Laplacian matrix of the graph of the grlex polytope in dimension `d`.
 
-The grlex polytope was introduced in [[4]](4).
-For details on the graph of the polytope, see Figure 2 in [[4]](4).
+The grlex polytope was introduced in [[5]](5).
+For details on the graph of the polytope, see Figure 2 in [[5]](5).
 The order of the vertices is θ, u3, ..., ud, w, v12, v13, v23, v14, ..., v1d, ..
 .., v{d-1}d, 0
 
@@ -167,7 +167,7 @@ julia> print(grlex(5))
 ```
 
 
-<a id="4">[4]</a> 
+<a id="5">[5]</a> 
 Akshay Gupte and Svetlana Poznanovic. “On Dantzig figures from graded lexico-
 graphic orders”. In: Discrete Mathematics 341.6 (2018), pp. 1534–1554.
 """
@@ -227,8 +227,8 @@ end
 Return the Laplacian matrix of the graph of the grevlex polytope
 in dimension `d`.
 
-The grevlex polytope was introduced in [[4]](4).
-See [[4]](4) and especially Figure 3 therein for a description
+The grevlex polytope was introduced in [[5]](5).
+See [[5]](5) and especially Figure 3 therein for a description
 of the graph of the grevlex polytope in dimension `d`
 The order of the vertices is u2, u3, ..., u{d+1}, θ, v13, ..., v1{d+1},
 v24, ..., v2{d+1}, v35, ..., v{d-2}v{d+1}, v{d-1}{d+1}
@@ -254,7 +254,7 @@ julia> grevlex(4)
   0   0  -1   0  -1   0   0  -1   0  -1   4
 ```
 
-<a id="4">[4]</a> 
+<a id="5">[5]</a> 
 Akshay Gupte and Svetlana Poznanovic. “On Dantzig figures from graded lexico-
 graphic orders”. In: Discrete Mathematics 341.6 (2018), pp. 1534–1554.
 """
