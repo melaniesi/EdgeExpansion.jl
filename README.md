@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/750878738.svg)](https://zenodo.org/doi/10.5281/zenodo.13379324)
 # EdgeExpansion.jl
 
 Package to compute the edge expansion of an undirected graph $G$. The edge expansion of $G$ is defined as
