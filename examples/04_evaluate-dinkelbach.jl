@@ -19,7 +19,8 @@ julia> evaluate_dinkelbach(paths biqbin_path=biqbinpath, ncores=4)
 function evaluate_dinkelbach(paths; biqbin_path=missing, ncores=4)
 
     for path in paths
-        # check needed folders and files
+        # check path, needed folders and files
+        if !(path[end] == '/') path = path * '/' end
         if !isdir(path*"/logs_dinkelbach/") mkdir(path*"/logs_dinkelbach/") end
         if !isfile(path*"/logs_dinkelbach/numerical-problems.txt")
             io = open(path*"/logs_dinkelbach/numerical-problems.txt", "w")

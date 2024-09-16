@@ -18,6 +18,7 @@ julia> evaluate_splitandbound(paths, biqbin=true, biqbin_path=biqbinpath, ncores
 """
 function evaluate_splitandbound(paths; biqbin=true, biqbin_path=missing, ncores=4)
     for path in paths
+        if !(path[end] == '/') path = path * '/' end
         if !isdir(path*"logs/") mkdir(path*"logs/") end
         if !isdir(path*"processed/") mkdir(path*"processed/") end
         graphFiles = filter(x->endswith(x, ".dat"), readdir(path,sort=false))
