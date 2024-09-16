@@ -25,7 +25,7 @@ function evaluate_splitandbound(paths; biqbin=true, biqbin_path=missing, ncores=
         for filename in graphFiles[perm]
             # input
             filepath = path * filename
-            instancename = split(filename, '.')[1]
+            instancename = String(split(filename, '.')[1])
             L = EdgeExpansion.RudyGraphIO.laplacian_from_RudyFile(filepath)
 
             # split and bound

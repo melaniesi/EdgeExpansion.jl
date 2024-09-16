@@ -34,7 +34,7 @@ function evaluate_dinkelbach(paths; biqbin_path=missing, ncores=4)
         # compute edge expansion and store result in log file + move file to processed/
         for filename in graphFiles[perm]
             # read input
-            instancename = split(filename, '.')[1]
+            instancename = String(split(filename, '.')[1])
             filepath = path * filename
             L = EdgeExpansion.RudyGraphIO.laplacian_from_RudyFile(filepath)
             # compute edge expansion
