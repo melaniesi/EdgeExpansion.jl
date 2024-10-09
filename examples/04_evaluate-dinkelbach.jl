@@ -21,14 +21,14 @@ function evaluate_dinkelbach(paths; biqbin_path=missing, ncores=4)
     for path in paths
         # check path, needed folders and files
         if !(path[end] == '/') path = path * '/' end
-        if !isdir(path*"/logs_dinkelbach/") mkdir(path*"/logs_dinkelbach/") end
-        if !isfile(path*"/logs_dinkelbach/numerical-problems.txt")
-            io = open(path*"/logs_dinkelbach/numerical-problems.txt", "w")
+        if !isdir(path*"logs_dinkelbach/") mkdir(path*"logs_dinkelbach/") end
+        if !isfile(path*"logs_dinkelbach/numerical-problems.txt")
+            io = open(path*"logs_dinkelbach/numerical-problems.txt", "w")
         else
             # file for listing instances with numerical problems
-            io = open(path*"/logs_dinkelbach/numerical-problems.txt", "a")
+            io = open(path*"logs_dinkelbach/numerical-problems.txt", "a")
         end
-        if !isdir(path*"/processed/") mkdir(path*"/processed/") end
+        if !isdir(path*"processed/") mkdir(path*"/processed/") end
         # sort files by number of vertices
         graphFiles = filter(x->endswith(x, ".dat"), readdir(path,sort=false))
         perm = sortperm_graphFiles(graphFiles, path)
@@ -54,7 +54,7 @@ function evaluate_dinkelbach(paths; biqbin_path=missing, ncores=4)
                     username = ENV["USER"]
                     cmdname = "biqbin"
                     try run(`pkill -x $cmdname -u $username`) catch end
-                    mv(filepath, path*"/processed/"*filename, force=true)
+                    mv(filepath, path*"processed/"*filename, force=true)
                     continue
                 end
             end
@@ -63,7 +63,7 @@ function evaluate_dinkelbach(paths; biqbin_path=missing, ncores=4)
             JSON.print(io_res, res_info, 4)
             close(io_res)
             # move file to /processed/
-            mv(filepath, path*"/processed/"*filename, force=true)
+            mv(filepath, path*"processed/"*filename, force=true)
         end
         close(io)
     end
