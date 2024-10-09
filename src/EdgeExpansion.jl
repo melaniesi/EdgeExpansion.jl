@@ -161,7 +161,7 @@ function split_and_bound(L, instancename="splitandbound-instance"; biqbin=true, 
         println("SOLVE BISECTION PROBLEM FOR k = $k")
         # solve bisection problem → multiply with k
         ub = ceil(global_upper_bound * k) # artificial ub to stop admm after lb/k ≥ global ub
-        ub_k = Int(new_upperBounds[k] * k)
+        ub_k = Int(round(new_upperBounds[k] * k))
         lb = lowerBounds[k] * k
         if biqbin
             opt_k, sol_k, bbnodes, time_exact = bisection_biqbin_withUB(L, k, instancename, ub, ub_k, ncores, biqbin_path)
