@@ -21,7 +21,7 @@ call are added to that file. This allows to interrupt the evaluation and ignore 
 julia> paths = ["/home/user/data/graphs/grlex/" "/home/user/data/graphs/grevlex/"];
 julia> biqbinpath = "/home/user/code/biqbinexpedis/";
 julia> dirlogs = "/home/user/data/logs/";
-julia> evaluate_dinkelbach(paths biqbin_path=biqbinpath, ncores=4, directory_logfiles=dirlogs)
+julia> evaluate_dinkelbach(paths, biqbin_path=biqbinpath, ncores=4, directory_logfiles=dirlogs)
 ```
 """
 function evaluate_dinkelbach(paths; biqbin_path=missing, ncores=4, directory_logfiles=missing,
