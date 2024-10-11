@@ -1,27 +1,52 @@
 using EdgeExpansion
+using JSON
 
 """
 
 Function to compute the edge expansion with Gurobi on all
 instances in the directories listed in `paths`.
 
-The computation is performed on all .dat files. After computation
-the input file is moved to the subdirectory /processed
-In /logs_gurobi a logfile with objective bound, relative gap
-and computation time is stored.
+The computation is performed on all .dat files. 
+If a path `directory_logfiles` is given, then a log file for each instance is stored in
+a subdirectory `benchmarkclass/logs_gurobi`, where benchmarkclass is the name
+of the directory given in `paths`.
+If `ignore_alreadyprocessed=true`, then instances with their filename listed in `.ignore-gurobi`
+in the path given in `paths` are not considered and all instances which were considered within this function
+call are added to that file. This allows to interrupt the evaluation and ignore already computed instances.
 
 # Example:
 ```julia-repl
 julia> paths = ["./graphs/grlex/", "./graphs/grevlex/"];
-julia> evaluate_gurobi(paths)
+julia> dirlogs = "./logs/";
+julia> evaluate_gurobi(paths, directory_logfiles=dirlogs)
 ```
 """
-function evaluate_gurobi(paths, uselowerbound=true; nthreads=4)
+function evaluate_gurobi(paths, uselowerbound=true; nthreads=4, directory_logfiles=missing, ignore_alreadyprocessed=true)
     for path in paths
         if !(path[end] == '/') path = path * '/' end
-        if !isdir(path*"logs_gurobi/") mkdir(path*"logs_gurobi/") end
-        if !isdir(path*"processed/") mkdir(path*"processed/") end
+        writelogfiles = !ismissing(directory_logfiles)
+        dirname = split(path, "/", keepempty=false)[end]
+        subdir_logfiles = writelogfiles ? directory_logfiles * "$dirname/logs_gurobi/" : missing
+        if writelogfiles 
+            if !isdir(directory_logfiles) mkdir(directory_logfiles) end
+            if !isdir(directory_logfiles * dirname) mkdir(directory_logfiles * dirname) end
+            if !isdir(subdir_logfiles) mkdir(subdir_logfiles) end
+        end
+        toignorefile = ignore_alreadyprocessed ? path * ".ignore-gurobi" : missing
+
         graphFiles = filter(x->endswith(x, ".dat"), readdir(path,sort=false))
+
+        # remove instances to ignore
+        if ignore_alreadyprocessed && isfile(toignorefile)
+            toignore = []
+            io = open(toignorefile, "r")
+            while !eof(io)
+                push!(toignore, readline(io))
+            end
+            close(io)
+            deleteat!(graphFiles, findall(in(toignore), graphFiles))
+        end
+
         perm = sortperm_graphFiles(graphFiles, path)
         for filename in graphFiles[perm]
             # input
@@ -33,14 +58,20 @@ function evaluate_gurobi(paths, uselowerbound=true; nthreads=4)
             val, gap, t  = uselowerbound ? gurobi_solve_exact(L, lb=0, timelimit=10800.0, nrthreads=nthreads)  :
                                            gurobi_solve_exact(L, timelimit=10800.0, nrthreads=nthreads) 
 
-            # write logfile
-            io = open(path * "logs_gurobi/" * instancename* ".csv", "w")
-            write(io, "instance;n;objectivebound;relativegap;solvetime\n")
-            write(io, "$instancename;$(size(L,1));$val;$gap;$t\n")
-            close(io)
+             # write result to log file
+            if writelogfiles
+                res_info = Dict("objectivebound" => val, "relativegap" => gap, "time" => t)
+                io_res = open(subdir_logfiles*instancename*".json", "w")
+                JSON.print(io_res, res_info, 4)
+                close(io_res)
+            end
 
-            # move file to processed folder
-            mv(filepath, path*"processed/"*filename, force=true)
+            # mark instance as processed
+            if ignore_alreadyprocessed
+                io = open(toignorefile, "a")
+                write(io, "\n" * filename)
+                close(io)
+            end
         end
     end
 end

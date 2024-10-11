@@ -2,38 +2,66 @@ using EdgeExpansion
 using JSON
 
 """
-    evaluate_dinkelbach(paths; biqbin_path=missing, ncores=4)
+    evaluate_dinkelbach(paths; biqbin_path=missing, ncores=4, directory_logfiles=missing,
+                                       ignore_alreadyprocessed=true)
 
 Function to run Dinkelbach's algorithm on all directories in `paths`.
 
 Execution is done on all .dat files stored in the directories in `paths`.
-After computation the input file is moved to the subdirectory /processed.
-In /logs a logfile in JSON format is stored.
+If a path `directory_logfiles` is given, then a log file for each instance is stored in
+a subdirectory `benchmarkclass/logs_dinkelbach`, where benchmarkclass is the name
+of the directory given in `paths`.
+If `ignore_alreadyprocessed=true`, then instances with their filename listed in `.ignore-dinkelbach`
+in the path given in `paths` are not considered and all instances which were considered within this function
+call are added to that file. This allows to interrupt the evaluation and ignore already computed instances.
+
 
 # Example:
 ```julia-repl
 julia> paths = ["/home/user/data/graphs/grlex/" "/home/user/data/graphs/grevlex/"];
 julia> biqbinpath = "/home/user/code/biqbinexpedis/";
-julia> evaluate_dinkelbach(paths biqbin_path=biqbinpath, ncores=4)
+julia> dirlogs = "/home/user/data/logs/";
+julia> evaluate_dinkelbach(paths biqbin_path=biqbinpath, ncores=4, directory_logfiles=dirlogs)
 ```
 """
-function evaluate_dinkelbach(paths; biqbin_path=missing, ncores=4)
+function evaluate_dinkelbach(paths; biqbin_path=missing, ncores=4, directory_logfiles=missing,
+                                    ignore_alreadyprocessed=true)
 
     for path in paths
         # check path, needed folders and files
         if !(path[end] == '/') path = path * '/' end
-        if !isdir(path*"logs_dinkelbach/") mkdir(path*"logs_dinkelbach/") end
-        if !isfile(path*"logs_dinkelbach/numerical-problems.txt")
-            io = open(path*"logs_dinkelbach/numerical-problems.txt", "w")
+        writelogfiles = !ismissing(directory_logfiles)
+        dirname = split(path, "/", keepempty=false)[end]
+        subdir_logfiles = writelogfiles ? directory_logfiles * "$dirname/logs_dinkelbach/" : missing
+        if writelogfiles 
+            if !isdir(directory_logfiles) mkdir(directory_logfiles) end
+            if !isdir(directory_logfiles * dirname) mkdir(directory_logfiles * dirname) end
+            if !isdir(subdir_logfiles) mkdir(subdir_logfiles) end
+        end
+        toignorefile = ignore_alreadyprocessed ? path * ".ignore-dinkelbach" : missing
+        if !isfile(subdir_logfiles * "numerical-problems.txt")
+            io = open(subdir_logfiles * "numerical-problems.txt", "w")
         else
             # file for listing instances with numerical problems
-            io = open(path*"logs_dinkelbach/numerical-problems.txt", "a")
+            io = open(subdir_logfiles * "numerical-problems.txt", "a")
         end
-        if !isdir(path*"processed/") mkdir(path*"/processed/") end
-        # sort files by number of vertices
+        
+        # get all instances in directory
         graphFiles = filter(x->endswith(x, ".dat"), readdir(path,sort=false))
+        # remove instances to ignore
+        if ignore_alreadyprocessed && isfile(toignorefile)
+            toignore = []
+            io = open(toignorefile, "r")
+            while !eof(io)
+                push!(toignore, readline(io))
+            end
+            close(io)
+            deleteat!(graphFiles, findall(in(toignore), graphFiles))
+        end
+        # sort files by number of vertices
         perm = sortperm_graphFiles(graphFiles, path)
-        # compute edge expansion and store result in log file + move file to processed/
+
+        # compute edge expansion and store result in log file
         for filename in graphFiles[perm]
             # read input
             instancename = String(split(filename, '.')[1])
@@ -60,11 +88,18 @@ function evaluate_dinkelbach(paths; biqbin_path=missing, ncores=4)
                 end
             end
             # write result to log file
-            io_res = open(path*"logs_dinkelbach/"*instancename*".json", "w")
-            JSON.print(io_res, res_info, 4)
-            close(io_res)
-            # move file to /processed/
-            mv(filepath, path*"processed/"*filename, force=true)
+            if writelogfiles
+                io_res = open(subdir_logfiles*instancename*".json", "w")
+                JSON.print(io_res, res_info, 4)
+                close(io_res)
+            end
+
+            # mark instance as processed
+            if ignore_alreadyprocessed
+                io = open(toignorefile, "a")
+                write(io, "\n" * filename)
+                close(io)
+            end
         end
         close(io)
     end
