@@ -20,7 +20,7 @@ To use the package `EdgeExpansion.jl` the following solvers are needed.
 * [Mosek Aps](https://www.mosek.com/)
 * [Gurobi](https://www.gurobi.com/)
 
-If BiqBin is used as solver for the $k$-bisection problem, version 1.1.0 of [BiqBin's source code](http://biqbin.eu/Home/Features#BiqBin) has to be installed. The modifications are tracked in the GitHub Repository [gitlab.aau.at/BiqBin/biqbin](https://gitlab.aau.at/BiqBin/biqbin). To run BiqBin, an installation of [mpich](https://www.mpich.org/) is required.
+If BiqBin is used as solver for the $k$-bisection problem, version 1.1.0 of [BiqBin's source code](http://biqbin.eu/Home/Features#BiqBin) has to be installed. The modifications are tracked in the Git Repository [gitlab.aau.at/BiqBin/biqbin](https://gitlab.aau.at/BiqBin/biqbin). To run BiqBin, an installation of [mpich](https://www.mpich.org/) is required.
 
 ### Example
 ```julia
